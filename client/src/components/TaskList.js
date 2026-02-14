@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { DragDropContext } from "@hello-pangea/dnd";
 
 function TaskList({ spec, setSpec }) {
   const [tasks, setTasks] = useState(spec.tasks);
