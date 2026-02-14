@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import api from './api';
 import Login from './components/Auth/Login';
 import Register from './components/Auth/Register';
@@ -7,8 +6,7 @@ import Form from './components/Form';
 import TaskList from './components/TaskList';
 import Export from './components/Export';
 import LastSpecs from './components/LastSpecs';
-import Home from './components/Home';
-import Status from './components/Status';
+import Status from './components/Status';  
 import './App.css';
 
 function App() {
@@ -18,6 +16,7 @@ function App() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [view, setView] = useState('login');
+  const [page, setPage] = useState('main');  // New: for page switching (main, home, status)
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -64,49 +63,60 @@ function App() {
     setCurrentSpec(null);
     setLastSpecs([]);
     setView('login');
+    setPage('main');
   };
 
-  return (
-    <Router>
+  if (!isAuthenticated) {
+    return (
       <div className="app">
-        <nav>
-          <Link to="/">Home</Link> | <Link to="/status">Status</Link>
-        </nav>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/status" element={<Status />} />
-          <Route path="/app" element={
-            <>
-              {!isAuthenticated ? (
-                <>
-                  <h1>Tasks Generator</h1>
-                  {view === 'login' ? (
-                    <Login onLogin={handleLogin} onSwitch={() => setView('register')} />
-                  ) : (
-                    <Register onLogin={handleLogin} onSwitch={() => setView('login')} />
-                  )}
-                </>
-              ) : (
-                <>
-                  <h1>Tasks Generator</h1>
-                  <button onClick={handleLogout}>Logout</button>
-                  <Form onGenerate={handleGenerate} />
-                  {error && <p className="error">{error}</p>}
-                  {message && <p className="success">{message}</p>}
-                  {currentSpec && (
-                    <>
-                      <TaskList spec={currentSpec} setSpec={setCurrentSpec} />
-                      <Export spec={currentSpec} />
-                    </>
-                  )}
-                  <LastSpecs specs={lastSpecs} onSelect={setCurrentSpec} />
-                </>
-              )}
-            </>
-          } />
-        </Routes>
+        <h1>Tasks Generator</h1>
+        {view === 'login' ? (
+          <Login onLogin={handleLogin} onSwitch={() => setView('register')} />
+        ) : (
+          <Register onLogin={handleLogin} onSwitch={() => setView('login')} />
+        )}
       </div>
-    </Router>
+    );
+  }
+
+  return (
+    <div className="app">
+      <nav>
+        <button onClick={() => setPage('home')}>Home</button>
+        <button onClick={() => setPage('status')}>Status</button>
+        <button onClick={() => setPage('main')}>App</button>
+        <button onClick={handleLogout}>Logout</button>
+      </nav>
+      {page === 'home' && (
+        <div className="home">
+          <h1>Welcome to Tasks Generator</h1>
+          <p>Follow these steps to get started:</p>
+          <ol>
+            <li>Register or login to your account.</li>
+            <li>Fill out the form with your feature idea (goal, users, constraints).</li>
+            <li>Generate user stories and engineering tasks.</li>
+            <li>Edit, reorder, and export your results.</li>
+          </ol>
+          <button onClick={() => setPage('main')}>Get Started</button>
+        </div>
+      )}
+      {page === 'status' && <Status />}
+      {page === 'main' && (
+        <>
+          <h1>Tasks Generator</h1>
+          <Form onGenerate={handleGenerate} />
+          {error && <p className="error">{error}</p>}
+          {message && <p className="success">{message}</p>}
+          {currentSpec && (
+            <>
+              <TaskList spec={currentSpec} setSpec={setCurrentSpec} />
+              <Export spec={currentSpec} />
+            </>
+          )}
+          <LastSpecs specs={lastSpecs} onSelect={setCurrentSpec} />
+        </>
+      )}
+    </div>
   );
 }
 
