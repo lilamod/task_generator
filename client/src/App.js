@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import api from './api';
 import Login from './components/Auth/Login';
 import Register from './components/Auth/Register';
@@ -6,6 +7,8 @@ import Form from './components/Form';
 import TaskList from './components/TaskList';
 import Export from './components/Export';
 import LastSpecs from './components/LastSpecs';
+import Home from './components/Home';
+import Status from './components/Status';
 import './App.css';
 
 function App() {
@@ -13,7 +16,7 @@ function App() {
   const [currentSpec, setCurrentSpec] = useState(null);
   const [lastSpecs, setLastSpecs] = useState([]);
   const [error, setError] = useState('');
-  const [message, setMessage] = useState('');  // For success messages
+  const [message, setMessage] = useState('');
   const [view, setView] = useState('login');
 
   useEffect(() => {
@@ -27,9 +30,9 @@ function App() {
 
   const fetchLastSpecs = async () => {
     setError('');
-    setMessage('');  // Clear previous messages
+    setMessage('');
     try {
-      const res = await api.get('api/task/last5');
+      const res = await api.get('/api/task/last5');
       setLastSpecs(res.data);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to load last specs.');
@@ -38,11 +41,11 @@ function App() {
 
   const handleGenerate = async (data) => {
     setError('');
-    setMessage('');  // Clear previous messages
+    setMessage('');
     try {
-      const res = await api.post('api/task/generate', data);
+      const res = await api.post('/api/task/generate', data);
       setCurrentSpec(res.data);
-      setMessage(res.data.message || 'Spec generated successfully!');  // Display backend message or fallback
+      setMessage(res.data.message || 'Spec generated successfully!');
       fetchLastSpecs();
     } catch (err) {
       setError(err.response?.data?.error || 'Generation failed.');
@@ -63,34 +66,47 @@ function App() {
     setView('login');
   };
 
-  if (!isAuthenticated) {
-    return (
-      <div className="app">
-        <h1>Tasks Generator</h1>
-        {view === 'login' ? (
-          <Login onLogin={handleLogin} onSwitch={() => setView('register')} />
-        ) : (
-          <Register onLogin={handleLogin} onSwitch={() => setView('login')} />
-        )}
-      </div>
-    );
-  }
-
   return (
-    <div className="app">
-      <h1>Tasks Generator</h1>
-      <button onClick={handleLogout}>Logout</button>
-      <Form onGenerate={handleGenerate} />
-      {error && <p className="error">{error}</p>}
-      {message && <p className="success">{message}</p>}
-      {currentSpec && (
-        <>
-          <TaskList spec={currentSpec} setSpec={setCurrentSpec} />
-          <Export spec={currentSpec} />
-        </>
-      )}
-      <LastSpecs specs={lastSpecs} onSelect={setCurrentSpec} />
-    </div>
+    <Router>
+      <div className="app">
+        <nav>
+          <Link to="/">Home</Link> | <Link to="/status">Status</Link>
+        </nav>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/status" element={<Status />} />
+          <Route path="/app" element={
+            <>
+              {!isAuthenticated ? (
+                <>
+                  <h1>Tasks Generator</h1>
+                  {view === 'login' ? (
+                    <Login onLogin={handleLogin} onSwitch={() => setView('register')} />
+                  ) : (
+                    <Register onLogin={handleLogin} onSwitch={() => setView('login')} />
+                  )}
+                </>
+              ) : (
+                <>
+                  <h1>Tasks Generator</h1>
+                  <button onClick={handleLogout}>Logout</button>
+                  <Form onGenerate={handleGenerate} />
+                  {error && <p className="error">{error}</p>}
+                  {message && <p className="success">{message}</p>}
+                  {currentSpec && (
+                    <>
+                      <TaskList spec={currentSpec} setSpec={setCurrentSpec} />
+                      <Export spec={currentSpec} />
+                    </>
+                  )}
+                  <LastSpecs specs={lastSpecs} onSelect={setCurrentSpec} />
+                </>
+              )}
+            </>
+          } />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 

@@ -1,0 +1,1 @@
+I used Chatgpt for creating this project. Mostly I used AI tool for adding style in frontend and in backend after complete code I take help for learning purpose as well as get idea for optimization so, in future this mistake does not repeat or get how can I make this code better and clean.
